@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Attendance Monitor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+    }
+    table {
+      border-collapse: collapse;
+      margin-top: 20px;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cloud-Based Attendance System</h1>
+  <input type="text" id="nameInput" placeholder="Enter your name" />
+  <button onclick="markAttendance()">Mark Attendance</button>
+  <h2>Attendance Records</h2>
+  <table id="attendanceTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Timestamp</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const SUPABASE_URL = 'https://eewbkejjyrpnuccoinjv.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVld2JrZWpqeXJwbnVjY29pbmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMjA2NzksImV4cCI6MjA2Mjc5NjY3OX0.0dGKMfRDoVrp5pfs4Ka4QsY7zQKF30SqNFfn29WB0TY';
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function markAttendance() {
+      const name = document.getElementById('nameInput').value.trim();
+      if (!name) {
+        alert('Please enter a name!');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('attendance')
+        .insert([{ name }]);
+
+      if (error) {
+        alert('Error marking attendance: ' + error.message);
+      } else {
+        alert('Attendance marked!');
+        loadAttendance();
+      }
+    }
+
+    async function loadAttendance() {
+      const { data, error } = await supabase
+        .from('attendance')
+        .select('*')
+        .order('timestamp', { ascending: false });
+
+      const tableBody = document.getElementById('tableBody');
+      tableBody.innerHTML = '';
+
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row.name}</td>
+          <td>${new Date(row.timestamp).toLocaleString()}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    // Load attendance on page load
+    loadAttendance();
+  </script>
+</body>
+</html>
